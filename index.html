@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>케인랭 웹 인터프리터 확장판</title>
+<style>
+body {
+    font-family: 'Courier New', monospace;
+    padding: 20px;
+    background: #1e1e1e;
+    color: #f5f5f5;
+}
+textarea {
+    width: 100%;
+    height: 250px;
+    font-family: monospace;
+    font-size: 14px;
+    background: #2e2e2e;
+    color: #f5f5f5;
+    border: 1px solid #555;
+    padding: 10px;
+    border-radius: 5px;
+}
+button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+button:hover {
+    background-color: #45a049;
+}
+#output {
+    margin-top: 20px;
+    background: #2e2e2e;
+    padding: 10px;
+    min-height: 150px;
+    white-space: pre-wrap;
+    border-radius: 5px;
+    border: 1px solid #555;
+    overflow-y: auto;
+}
+#variables {
+    margin-top: 20px;
+    background: #2e2e2e;
+    padding: 10px;
+    min-height: 100px;
+    font-size: 13px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    overflow-y: auto;
+}
+h2, h3 {
+    color: #f1c40f;
+}
+</style>
+</head>
+<body>
+
+<h2>케인랭 웹 인터프리터 확장판</h2>
+<textarea id="code"></textarea><br>
+<button onclick="runCainLang()">실행</button>
+<button onclick="resetVariables()">변수 초기화</button>
+
+<h3>출력</h3>
+<div id="output"></div>
+<h3>변수 상태</h3>
+<div id="variables"></div>
+
+<script>
+const variables = {};
+
+function resetVariables() {
+    for(const key in variables) delete variables[key];
+    document.getElementById('output').innerHTML = '';
+    document.getElementById('variables').innerHTML = '';
+}
+
+function updateVariables() {
+    const varDiv = document.getElementById('variables');
+    varDiv.innerHTML = '';
+    for(const key in variables) {
+        varDiv.innerHTML += key + ' : ' + variables[key] + '\n';
+    }
+}
+
+function runCainLang() {
+    const code = document.getElementById("code").value;
+    const output = document.getElementById("output");
+    output.innerHTML = "";
+
+    const lines = code.split("\n").map(l => l.trim()).filter(l => l);
+
+    if(lines[0] !== "자 유튜브쟁이 선비 그지빵꾸 안녕안녕") {
+        output.innerHTML = "케인랭 시작이 잘못되었습니다";
+        return;
+    }
+    if(lines[lines.length-1] !== "맨이야") {
+        output.innerHTML = "케인랭 끝이 잘못되었습니다";
+        return;
+    }
+
+    let i = 1;
+    while(i < lines.length - 1) {
+        const line = lines[i];
+
+        if(line.includes("<<") && !line.startsWith("뭉탱이")) {
+            const [varName, val] = line.split("<<").map(s => s.trim());
+            variables[varName] = isNaN(val) ? val : Number(val);
+            updateVariables();
+            i++;
+            continue;
+        }
+
+        if(line.startsWith("뭉탱이")) {
+            const [funcName, arg] = line.split("<<").map(s => s.trim());
+            let argVal = variables[arg] !== undefined ? variables[arg] : Number(arg);
+            variables["뿅뿅"] = argVal * 2;
+            updateVariables();
+            i++;
+            continue;
+        }
+
+        if(line.startsWith("한탕")) {
+            const varName = line.split(" ")[1];
+            variables["한탕값"] = variables[varName];
+            updateVariables();
+            i++;
+            continue;
+        }
+
+        if(line.startsWith("계속")) {
+            const times = Number(line.split(" ")[1].replace("번",""));
+            const innerLines = [];
+            i++;
+            while(i < lines.length-1 && lines[i].startsWith("    ")) {
+                innerLines.push(lines[i].trim());
+                i++;
+            }
+            for(let t=0;t<times;t++){
+                innerLines.forEach(inner=>{
+                    if(inner.startsWith("보여")) {
+                        output.innerHTML += inner.split(" ").slice(1).join(" ") + "\n";
+                    }
+                });
+            }
+            continue;
+        }
+
+        if(line.startsWith("보여")) {
+            output.innerHTML += line.split(" ").slice(1).join(" ") + "\n";
+        }
+
+        i++;
+    }
+}
+</script>
+
+</body>
+</html>
